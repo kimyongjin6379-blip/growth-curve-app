@@ -266,7 +266,19 @@
         series.forEach((s, idx) => {
             const color = CHART_COLORS[idx % CHART_COLORS.length];
 
-            // Mean line
+            // Build error_y config from SD data
+            const errorYConfig = (s.sd && s.sd.some(v => v !== null && v > 0))
+                ? {
+                    type: 'data',
+                    array: s.sd.map(v => v !== null ? v : 0),
+                    visible: true,
+                    color: hexToRgba(color, 0.4),
+                    thickness: 1.5,
+                    width: 3,
+                }
+                : undefined;
+
+            // Mean line with error bars
             traces.push({
                 x: time_hours,
                 y: s.mean,
@@ -276,43 +288,14 @@
                 line: {
                     color: color,
                     width: 2.5,
-                    shape: 'spline',
+                    shape: 'linear',
                 },
                 marker: {
                     color: color,
                     size: 5,
                 },
+                error_y: errorYConfig,
             });
-
-            // Error bars (SD)
-            if (s.sd && s.sd.some(v => v !== null && v > 0)) {
-                const upperY = s.mean.map((m, i) => m !== null && s.sd[i] !== null ? m + s.sd[i] : null);
-                const lowerY = s.mean.map((m, i) => m !== null && s.sd[i] !== null ? m - s.sd[i] : null);
-
-                // Upper bound
-                traces.push({
-                    x: time_hours,
-                    y: upperY,
-                    type: 'scatter',
-                    mode: 'lines',
-                    line: { width: 0 },
-                    showlegend: false,
-                    hoverinfo: 'skip',
-                });
-
-                // Lower bound (filled to upper)
-                traces.push({
-                    x: time_hours,
-                    y: lowerY,
-                    type: 'scatter',
-                    mode: 'lines',
-                    line: { width: 0 },
-                    fill: 'tonexty',
-                    fillcolor: hexToRgba(color, 0.1),
-                    showlegend: false,
-                    hoverinfo: 'skip',
-                });
-            }
         });
 
         const layout = {
