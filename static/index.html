@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Microplate Reader Growth Curve Data Automation Tool - 원본 데이터를 자동으로 가공하고 시각화합니다.">
+    <title>Growth Curve Data Automation Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="header" id="header">
+            <div class="header-inner">
+                <div class="logo-group">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <path d="M4 24C4 24 6 8 14 4C22 8 24 24 24 24" stroke="url(#grad1)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                            <path d="M7 22C7 22 9 12 14 9C19 12 21 22 21 22" stroke="url(#grad2)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="4" y1="4" x2="24" y2="24">
+                                    <stop offset="0%" stop-color="#6366f1"/>
+                                    <stop offset="100%" stop-color="#06b6d4"/>
+                                </linearGradient>
+                                <linearGradient id="grad2" x1="7" y1="9" x2="21" y2="22">
+                                    <stop offset="0%" stop-color="#a78bfa"/>
+                                    <stop offset="100%" stop-color="#22d3ee"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="logo-title">Growth Curve Automation</h1>
+                        <p class="logo-subtitle">Microplate Reader Data Processing Tool</p>
+                    </div>
+                </div>
+                <div class="header-badge">
+                    <span class="badge-dot"></span>
+                    Internal Tool v1.0
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Upload & Metadata -->
+            <section class="panel panel-left">
+                <!-- File Upload Area -->
+                <div class="card" id="upload-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M3 14V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                <path d="M10 3V12M10 3L6 7M10 3L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            파일 업로드
+                        </h2>
+                    </div>
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon" id="drop-icon">
+                                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                    <rect x="8" y="6" width="32" height="36" rx="4" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
+                                    <path d="M16 20H32M16 26H28M16 32H24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                                    <circle cx="36" cy="36" r="10" fill="var(--accent-primary)" opacity="0.15"/>
+                                    <path d="M36 31V41M36 31L32 35M36 31L40 35" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <p class="drop-text">파일을 여기에 드래그 앤 드롭하세요</p>
+                            <p class="drop-hint">또는 클릭하여 파일 선택</p>
+                            <p class="drop-formats">.xlsx / .csv 지원</p>
+                        </div>
+                        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+                    </div>
+                    <div class="file-info" id="file-info" style="display:none;">
+                        <div class="file-info-icon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <path d="M7 7H13M7 10H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="file-info-details">
+                            <span class="file-name" id="file-name"></span>
+                            <span class="file-size" id="file-size"></span>
+                        </div>
+                        <button class="file-remove" id="file-remove" title="파일 제거">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metadata Input Form -->
+                <div class="card" id="metadata-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <path d="M7 7H13M7 10H13M7 13H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            실험 메타데이터
+                        </h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="experiment-date">실험 일자</label>
+                        <input type="date" class="form-input" id="experiment-date" placeholder="예: 2026-03-15">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="goal">목표</label>
+                        <input type="text" class="form-input" id="goal" placeholder="예: OD600 측정을 통한 성장곡선 분석">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="strain">사용 균주</label>
+                        <input type="text" class="form-input" id="strain" placeholder="예: Lactobacillus plantarum">
+                    </div>
+                </div>
+
+                <!-- Sample Mapping (동적으로 표시) -->
+                <div class="card" id="sample-map-card" style="display:none;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M3 3H17V17H3V3Z" stroke="currentColor" stroke-width="1.5" fill="none" rx="2"/>
+                                <path d="M3 7H17M7 3V17" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            샘플 매핑 (선택사항)
+                        </h2>
+                        <span class="card-hint">가공 후 자동 감지됩니다</span>
+                    </div>
+                    <p class="mapping-desc">각 그룹코드에 실제 샘플명과 펩톤 농도를 지정하세요. 비워두면 그룹코드가 그대로 사용됩니다.</p>
+                    <div class="mapping-table-wrap">
+                        <table class="mapping-table" id="mapping-table">
+                            <thead>
+                                <tr>
+                                    <th>그룹코드</th>
+                                    <th>샘플명 (배지/펩톤)</th>
+                                    <th>펩톤 (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mapping-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Process Button -->
+                <button class="btn-process" id="btn-process" disabled>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3V17M10 3L5 8M10 3L15 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>데이터 가공 시작</span>
+                </button>
+
+                <!-- Status / Loading -->
+                <div class="status-area" id="status-area" style="display:none;">
+                    <div class="status-loading" id="status-loading">
+                        <div class="spinner"></div>
+                        <span>데이터 가공 중...</span>
+                    </div>
+                    <div class="status-success" id="status-success" style="display:none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="var(--success)" stroke-width="2" fill="none"/>
+                            <path d="M8 12L11 15L16 9" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="status-message">가공이 완료되었습니다!</span>
+                    </div>
+                    <div class="status-error" id="status-error" style="display:none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="var(--error)" stroke-width="2" fill="none"/>
+                            <path d="M8 8L16 16M16 8L8 16" stroke="var(--error)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span id="error-message">오류가 발생했습니다.</span>
+                    </div>
+                </div>
+
+                <!-- Download Button -->
+                <button class="btn-download" id="btn-download" disabled style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 14V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M10 3V12M10 12L6 8M10 12L14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>가공된 엑셀 파일 다운로드</span>
+                </button>
+            </section>
+
+            <!-- Right Panel: Chart Preview -->
+            <section class="panel panel-right">
+                <div class="card chart-card" id="chart-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M3 17V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                <path d="M3 17H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                <path d="M5 13C7 13 8 8 10 7C12 6 13 10 15 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                            </svg>
+                            Growth Curve Preview
+                        </h2>
+                        <span class="chart-badge" id="chart-badge" style="display:none;">LIVE</span>
+                    </div>
+                    <div class="chart-placeholder" id="chart-placeholder">
+                        <div class="chart-placeholder-content">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                <rect x="8" y="8" width="48" height="48" rx="8" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.2"/>
+                                <path d="M16 48L24 36L32 40L40 24L48 28" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.3"/>
+                                <circle cx="24" cy="36" r="3" fill="currentColor" opacity="0.2"/>
+                                <circle cx="32" cy="40" r="3" fill="currentColor" opacity="0.2"/>
+                                <circle cx="40" cy="24" r="3" fill="currentColor" opacity="0.2"/>
+                            </svg>
+                            <p>파일을 업로드하고 가공을 시작하면<br>Growth Curve 그래프가 여기에 표시됩니다.</p>
+                        </div>
+                    </div>
+                    <div id="chart-container" style="display:none;">
+                        <div id="plotly-chart"></div>
+                    </div>
+                </div>
+
+                <!-- Data Summary Card -->
+                <div class="card summary-card" id="summary-card" style="display:none;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <rect x="2" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <rect x="11" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <rect x="2" y="12" width="7" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <rect x="11" y="12" width="7" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                            </svg>
+                            데이터 요약
+                        </h2>
+                    </div>
+                    <div class="summary-grid" id="summary-grid"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Growth Curve Data Automation Tool &copy; 2026 &middot; Internal Use Only</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
