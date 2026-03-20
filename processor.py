@@ -36,6 +36,13 @@ def get_peptone_pct(group_code: str, sample_map: dict):
     return None
 
 
+def get_strain(group_code: str, sample_map: dict, fallback: str = "") -> str:
+    """SM 그룹코드 → 균주명 반환. 매핑 없으면 fallback 사용."""
+    if group_code in sample_map:
+        return sample_map[group_code][2] or fallback
+    return fallback
+
+
 # ---------------------------------------------------------------------------
 # 1. 원본 데이터 읽기 (첫 번째 Raw OD 블록만 추출)
 # ---------------------------------------------------------------------------
@@ -178,7 +185,7 @@ def write_output_bytes(
     time_cols: list,
     time_seconds: list,
     metadata: Optional[Dict[str, str]] = None,
-    sample_map: Optional[Dict[str, Tuple[str, float]]] = None,
+    sample_map: Optional[Dict[str, Tuple[str, float, str]]] = None,
     original_raw: Optional[pd.DataFrame] = None,
 ) -> bytes:
     """3개 시트를 가진 결과 엑셀 파일을 바이트로 생성하여 반환."""
@@ -396,9 +403,10 @@ def write_output_bytes(
         display = get_display_name(grp, smap)
         pct = get_peptone_pct(grp, smap)
 
-        # 균주명
+        # 균주명 (그룹별)
+        grp_strain = get_strain(grp, smap, strain_name)
         ws3.cell(
-            row=i, column=1, value=strain_name if strain_name else ""
+            row=i, column=1, value=grp_strain
         ).border = thin_border
 
         # 그룹코드
@@ -472,7 +480,8 @@ def write_output_bytes(
 
     for ci, sample_name in enumerate(samples, start=2):
         grp = extract_group_name(sample_name)
-        cell = ws4.cell(row=2, column=ci, value=strain_name if strain_name else "")
+        grp_strain = get_strain(grp, smap, strain_name)
+        cell = ws4.cell(row=2, column=ci, value=grp_strain)
         cell.border = thin_border
         cell.alignment = center_align
 
@@ -581,16 +590,17 @@ def write_output_bytes(
     cell_strain.border = thin_border
     cell_strain.alignment = center_align
 
-    for gi in range(n_groups):
+    for gi, grp in enumerate(groups):
+        grp_strain = get_strain(grp, smap, strain_name)
         cell_m = ws5.cell(
             row=3, column=mean_col_start + gi,
-            value=strain_name if strain_name else "",
+            value=grp_strain,
         )
         cell_m.border = thin_border
         cell_m.alignment = center_align
         cell_s = ws5.cell(
             row=3, column=sd_col_start + gi,
-            value=strain_name if strain_name else "",
+            value=grp_strain,
         )
         cell_s.border = thin_border
         cell_s.alignment = center_align
@@ -684,7 +694,7 @@ def extract_chart_data(
     mean_df: pd.DataFrame,
     sd_df: pd.DataFrame,
     time_seconds: list,
-    sample_map: Optional[Dict[str, Tuple[str, float]]] = None,
+    sample_map: Optional[Dict[str, Tuple[str, float, str]]] = None,
 ) -> Dict:
     """Plotly 차트에 필요한 데이터를 딕셔너리로 반환."""
     smap = sample_map or {}
@@ -718,17 +728,17 @@ def extract_chart_data(
 # ---------------------------------------------------------------------------
 # 6. 샘플 매핑 파싱 (프론트엔드 JSON → dict)
 # ---------------------------------------------------------------------------
-def parse_sample_map(sample_map_list: Optional[List[Dict]] = None) -> Dict[str, Tuple[str, float]]:
+def parse_sample_map(sample_map_list: Optional[List[Dict]] = None) -> Dict[str, Tuple[str, float, str]]:
     """프론트엔드에서 전달된 샘플 매핑 리스트를 dict로 변환.
 
     Parameters
     ----------
     sample_map_list : list of dict
-        [{"code": "SM1", "name": "MRS (Control)", "peptone_pct": 0.0}, ...]
+        [{"code": "SM1", "name": "MRS (Control)", "peptone_pct": 0.0, "strain": "L. plantarum"}, ...]
 
     Returns
     -------
-    dict: {"SM1": ("MRS (Control)", 0.0), ...}
+    dict: {"SM1": ("MRS (Control)", 0.0, "L. plantarum"), ...}
     """
     if not sample_map_list:
         return {}
@@ -738,12 +748,13 @@ def parse_sample_map(sample_map_list: Optional[List[Dict]] = None) -> Dict[str, 
         code = item.get("code", "").strip()
         name = item.get("name", "").strip()
         pct = item.get("peptone_pct")
-        if code and name:
+        strain = item.get("strain", "").strip()
+        if code and (name or strain):
             try:
                 pct_val = float(pct) if pct is not None and pct != "" else 0.0
             except (ValueError, TypeError):
                 pct_val = 0.0
-            result[code] = (name, pct_val)
+            result[code] = (name, pct_val, strain)
 
     return result
 
