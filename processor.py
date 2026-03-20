@@ -427,6 +427,210 @@ def write_output_bytes(
     ws3.column_dimensions["C"].width = 25
     ws3.column_dimensions["D"].width = 12
 
+    # =================================================================
+    # Sheet 4: raw (세로) — Blank 보정 Well별 데이터 (전치: 시간=행, Well=열)
+    # =================================================================
+    ws4 = wb.create_sheet(title="raw (세로)")
+
+    # 보정 데이터에서 Well/Sample 정보 추출
+    wells = corrected_df["Well"].tolist()
+    samples = corrected_df["Sample"].tolist()
+
+    # ── 행 1: 헤더 — "Time (h)" + 각 Well의 Sample 이름
+    cell_h = ws4.cell(row=1, column=1, value="Time (h)")
+    cell_h.font = header_font
+    cell_h.fill = header_fill
+    cell_h.border = thin_border
+    cell_h.alignment = center_align
+
+    for ci, sample_name in enumerate(samples, start=2):
+        cell = ws4.cell(row=1, column=ci, value=sample_name)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = thin_border
+        cell.alignment = center_align
+
+    # ── 행 2: 균주명
+    cell_s = ws4.cell(row=2, column=1, value="균주명")
+    cell_s.font = header_font
+    cell_s.fill = PatternFill("solid", fgColor="E2EFDA")
+    cell_s.border = thin_border
+    cell_s.alignment = center_align
+
+    for ci, sample_name in enumerate(samples, start=2):
+        grp = extract_group_name(sample_name)
+        cell = ws4.cell(row=2, column=ci, value=strain_name if strain_name else "")
+        cell.border = thin_border
+        cell.alignment = center_align
+
+    # ── 행 3: 샘플명
+    cell_n = ws4.cell(row=3, column=1, value="샘플명")
+    cell_n.font = header_font
+    cell_n.fill = PatternFill("solid", fgColor="E2EFDA")
+    cell_n.border = thin_border
+    cell_n.alignment = center_align
+
+    for ci, sample_name in enumerate(samples, start=2):
+        grp = extract_group_name(sample_name)
+        display = get_display_name(grp, smap)
+        cell = ws4.cell(row=3, column=ci, value=display if display != grp else grp)
+        cell.border = thin_border
+        cell.alignment = center_align
+
+    # ── 데이터 행: 시간별 OD 값
+    data_start_row = 4
+    for ti, t in enumerate(time_cols):
+        row_idx = data_start_row + ti
+        h = time_hours[ti]
+
+        cell_time = ws4.cell(row=row_idx, column=1, value=round(h, 4))
+        cell_time.border = thin_border
+        cell_time.number_format = "0.00"
+        cell_time.alignment = center_align
+
+        for ci, (_, row_data) in enumerate(corrected_df.iterrows(), start=2):
+            cell = ws4.cell(row=row_idx, column=ci, value=round(row_data[t], 5))
+            cell.border = thin_border
+            cell.number_format = "0.00000"
+
+    ws4.column_dimensions["A"].width = 12
+
+    # =================================================================
+    # Sheet 5: data 가공 (세로) — 그룹 통계 전치 (시간=행, 그룹=열)
+    # =================================================================
+    ws5 = wb.create_sheet(title="data 가공 (세로)")
+
+    n_groups = len(groups)
+
+    # ── 행 1: 구분 라벨 — Mean 영역 + SD 영역
+    cell_h5 = ws5.cell(row=1, column=1, value="Time (h)")
+    cell_h5.font = header_font
+    cell_h5.fill = header_fill
+    cell_h5.border = thin_border
+    cell_h5.alignment = center_align
+
+    mean_col_start = 2
+    sd_col_start = 2 + n_groups
+
+    # Mean 구분 라벨 (merge)
+    mean_label = ws5.cell(row=1, column=mean_col_start, value="Mean")
+    mean_label.font = Font(bold=True, color="FFFFFF")
+    mean_label.fill = PatternFill("solid", fgColor="4472C4")
+    mean_label.alignment = center_align
+    mean_label.border = thin_border
+    if n_groups > 1:
+        ws5.merge_cells(
+            start_row=1,
+            start_column=mean_col_start,
+            end_row=1,
+            end_column=mean_col_start + n_groups - 1,
+        )
+
+    # SD 구분 라벨 (merge)
+    sd_label = ws5.cell(row=1, column=sd_col_start, value="SD")
+    sd_label.font = Font(bold=True, color="FFFFFF")
+    sd_label.fill = PatternFill("solid", fgColor="ED7D31")
+    sd_label.alignment = center_align
+    sd_label.border = thin_border
+    if n_groups > 1:
+        ws5.merge_cells(
+            start_row=1,
+            start_column=sd_col_start,
+            end_row=1,
+            end_column=sd_col_start + n_groups - 1,
+        )
+
+    # ── 행 2: 그룹코드
+    cell_gc = ws5.cell(row=2, column=1, value="그룹코드")
+    cell_gc.font = header_font
+    cell_gc.fill = header_fill
+    cell_gc.border = thin_border
+    cell_gc.alignment = center_align
+
+    for gi, grp in enumerate(groups):
+        # Mean 열
+        cell_m = ws5.cell(row=2, column=mean_col_start + gi, value=grp)
+        cell_m.font = header_font
+        cell_m.fill = PatternFill("solid", fgColor="D6E4F0")
+        cell_m.border = thin_border
+        cell_m.alignment = center_align
+        # SD 열
+        cell_s = ws5.cell(row=2, column=sd_col_start + gi, value=grp)
+        cell_s.font = header_font
+        cell_s.fill = PatternFill("solid", fgColor="FCE4D6")
+        cell_s.border = thin_border
+        cell_s.alignment = center_align
+
+    # ── 행 3: 균주명
+    cell_strain = ws5.cell(row=3, column=1, value="균주명")
+    cell_strain.font = header_font
+    cell_strain.fill = PatternFill("solid", fgColor="E2EFDA")
+    cell_strain.border = thin_border
+    cell_strain.alignment = center_align
+
+    for gi in range(n_groups):
+        cell_m = ws5.cell(
+            row=3, column=mean_col_start + gi,
+            value=strain_name if strain_name else "",
+        )
+        cell_m.border = thin_border
+        cell_m.alignment = center_align
+        cell_s = ws5.cell(
+            row=3, column=sd_col_start + gi,
+            value=strain_name if strain_name else "",
+        )
+        cell_s.border = thin_border
+        cell_s.alignment = center_align
+
+    # ── 행 4: 샘플명
+    cell_sn = ws5.cell(row=4, column=1, value="샘플명")
+    cell_sn.font = header_font
+    cell_sn.fill = PatternFill("solid", fgColor="E2EFDA")
+    cell_sn.border = thin_border
+    cell_sn.alignment = center_align
+
+    for gi, grp in enumerate(groups):
+        display = get_display_name(grp, smap)
+        disp_val = display if display != grp else grp
+
+        cell_m = ws5.cell(row=4, column=mean_col_start + gi, value=disp_val)
+        cell_m.border = thin_border
+        cell_m.alignment = center_align
+        cell_s = ws5.cell(row=4, column=sd_col_start + gi, value=disp_val)
+        cell_s.border = thin_border
+        cell_s.alignment = center_align
+
+    # ── 데이터 행: 시간별 Mean/SD 값
+    v_data_start = 5
+    for ti, t in enumerate(time_cols):
+        row_idx = v_data_start + ti
+        h = time_hours[ti]
+
+        cell_time = ws5.cell(row=row_idx, column=1, value=round(h, 4))
+        cell_time.border = thin_border
+        cell_time.number_format = "0.00"
+        cell_time.alignment = center_align
+
+        for gi, grp in enumerate(groups):
+            # Mean
+            cell_m = ws5.cell(
+                row=row_idx,
+                column=mean_col_start + gi,
+                value=round(mean_df.loc[grp, t], 5),
+            )
+            cell_m.border = thin_border
+            cell_m.number_format = "0.00000"
+            # SD
+            cell_s = ws5.cell(
+                row=row_idx,
+                column=sd_col_start + gi,
+                value=round(sd_df.loc[grp, t], 5),
+            )
+            cell_s.border = thin_border
+            cell_s.number_format = "0.00000"
+
+    ws5.column_dimensions["A"].width = 12
+
     # 바이트로 저장
     output = io.BytesIO()
     wb.save(output)
