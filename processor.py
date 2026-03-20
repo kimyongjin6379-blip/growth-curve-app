@@ -51,6 +51,7 @@ def read_raw_block(filepath_or_bytes):
     -------
     df : DataFrame with columns: Well, Sample, T0, T1, T2, ...
     time_seconds : list[int] — 각 타임포인트의 초 단위 값
+    original_raw : DataFrame — 원본 시트 전체 데이터 (Tecan Raw 보존용)
     """
     if isinstance(filepath_or_bytes, bytes):
         filepath_or_bytes = io.BytesIO(filepath_or_bytes)
@@ -118,7 +119,7 @@ def read_raw_block(filepath_or_bytes):
     for col in time_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    return df, time_seconds
+    return df, time_seconds, raw
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +179,7 @@ def write_output_bytes(
     time_seconds: list,
     metadata: Optional[Dict[str, str]] = None,
     sample_map: Optional[Dict[str, Tuple[str, float]]] = None,
+    original_raw: Optional[pd.DataFrame] = None,
 ) -> bytes:
     """3개 시트를 가진 결과 엑셀 파일을 바이트로 생성하여 반환."""
     wb = Workbook()
@@ -642,6 +644,32 @@ def write_output_bytes(
 
     ws5.column_dimensions["A"].width = 12
 
+    # =================================================================
+    # Sheet 6: 원본 (Tecan Raw) — 업로드된 원본 파일 데이터 전체 보존
+    # =================================================================
+    if original_raw is not None and not original_raw.empty:
+        ws6 = wb.create_sheet(title="원본 (Tecan Raw)")
+
+        raw_fill_header = PatternFill("solid", fgColor="FFF2CC")
+
+        for ri in range(len(original_raw)):
+            for ci in range(len(original_raw.columns)):
+                val = original_raw.iloc[ri, ci]
+                # NaN → 빈 셀
+                if pd.isna(val):
+                    val = None
+                cell = ws6.cell(row=ri + 1, column=ci + 1, value=val)
+                cell.border = thin_border
+                # 첫 번째 행(시간 헤더)은 스타일 적용
+                if ri == 0 and val is not None:
+                    cell.font = header_font
+                    cell.fill = raw_fill_header
+                    cell.alignment = center_align
+                # 첫 두 열(Well, Sample)은 스타일 적용
+                if ci < 2 and val is not None and ri > 0:
+                    cell.font = Font(bold=True)
+                    cell.alignment = center_align
+
     # 바이트로 저장
     output = io.BytesIO()
     wb.save(output)
@@ -747,7 +775,7 @@ def process_file(
     sample_map = parse_sample_map(sample_map_list)
 
     # 1) Raw 블록 추출
-    df, time_seconds = read_raw_block(file_bytes)
+    df, time_seconds, original_raw = read_raw_block(file_bytes)
     time_cols = [c for c in df.columns if c.startswith("T")]
 
     # 2) Blank 보정
@@ -758,7 +786,8 @@ def process_file(
 
     # 4) 엑셀 출력 (바이트)
     excel_bytes = write_output_bytes(
-        corrected, mean_df, sd_df, time_cols, time_seconds, metadata, sample_map
+        corrected, mean_df, sd_df, time_cols, time_seconds, metadata, sample_map,
+        original_raw,
     )
 
     # 5) 차트 데이터
