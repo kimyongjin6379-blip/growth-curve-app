@@ -126,12 +126,11 @@
     // ── Sample Mapping UI ──
     function buildMappingTable(groups) {
         mappingTbody.innerHTML = '';
-        const globalStrain = document.getElementById('strain').value || '';
         groups.forEach((grp) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="mapping-code">${grp}</td>
-                <td><input type="text" class="form-input mapping-strain" data-code="${grp}" placeholder="균주명 입력" value="${globalStrain}"></td>
+                <td><input type="text" class="form-input mapping-strain" data-code="${grp}" placeholder="균주명 입력"></td>
                 <td><input type="text" class="form-input mapping-name" data-code="${grp}" placeholder="샘플명 입력"></td>
                 <td><input type="number" class="form-input mapping-pct" data-code="${grp}" placeholder="0.0" step="0.1" min="0"></td>
             `;
