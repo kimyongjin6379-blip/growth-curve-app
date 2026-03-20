@@ -69,6 +69,17 @@ def read_raw_block(filepath_or_bytes):
         filepath_or_bytes, sheet_name=sheet_name, header=None, engine="openpyxl"
     )
 
+    # ── 원본 데이터 보존 (Transpose 되기 전의 원본 형태) ──
+    original_raw_preserve = raw.copy()
+
+    # ── 세로형(수직형) 데이터 감지 및 가로형(수평형)으로 변환 ──
+    # 첫 번째 열(Col 0)에 시간 데이터('숫자s')가 3개 이상 존재하면 세로형으로 판단
+    col_0_strs = raw.iloc[:, 0].dropna().astype(str)
+    if sum(col_0_strs.str.match(r"^\d+\s*s$")) > 2:
+        raw = raw.T.reset_index(drop=True)
+        # 컬럼명을 0, 1, 2... 순서로 다시 맞춤
+        raw.columns = range(raw.shape[1])
+
     # 첫 번째 행: 시간 헤더 탐색 (숫자 + 's' 또는 '숫자 s' 패턴)
     header_row_idx = None
     for i, row in raw.iterrows():
@@ -126,7 +137,7 @@ def read_raw_block(filepath_or_bytes):
     for col in time_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    return df, time_seconds, raw
+    return df, time_seconds, original_raw_preserve
 
 
 # ---------------------------------------------------------------------------
