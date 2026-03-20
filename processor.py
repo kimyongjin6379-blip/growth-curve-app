@@ -87,6 +87,17 @@ def read_raw_block(filepath_or_bytes):
         m = re.match(r"(\d+)\s*s", str(h))
         time_seconds.append(int(m.group(1)) if m else 0)
 
+    # ── 단조 증가 검사: 시간이 다시 작아지면 (두 번째 블록 시작) 거기서 잘라냄 ──
+    # Magellan 리더가 여러 측정 블록을 연속으로 내보내는 경우 방지
+    cut_idx = len(time_seconds)
+    for idx in range(1, len(time_seconds)):
+        if time_seconds[idx] <= time_seconds[idx - 1]:
+            cut_idx = idx
+            break
+    if cut_idx < len(time_seconds):
+        time_seconds = time_seconds[:cut_idx]
+        n_times = cut_idx
+
     # 고유 컬럼명 생성 (T0, T1, T2, ...)
     time_cols = [f"T{i}" for i in range(n_times)]
 
