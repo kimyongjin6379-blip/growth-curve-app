@@ -143,10 +143,35 @@
     function collectSampleMap() {
         const rows = mappingTbody.querySelectorAll('tr');
         const result = [];
+        let firstStrain = '';
+
+        // 첫 번째 부분: 첫 번째로 입력된 균주명을 찾는다
+        for (let i = 0; i < rows.length; i++) {
+            const strainInput = rows[i].querySelector('.mapping-strain');
+            if (strainInput && strainInput.value.trim() !== '') {
+                firstStrain = strainInput.value.trim();
+                break;
+            }
+        }
+        
+        // 입력된 균주명이 하나도 없으면 전역 '사용 균주' 값으로 대체
+        if (!firstStrain) {
+            const globalStrainInput = document.getElementById('strain');
+            if (globalStrainInput) {
+                firstStrain = globalStrainInput.value.trim();
+            }
+        }
+
         rows.forEach((tr) => {
             const code = tr.querySelector('.mapping-code').textContent.trim();
             const strainInput = tr.querySelector('.mapping-strain');
-            const strain = strainInput ? strainInput.value.trim() : '';
+            let strain = strainInput ? strainInput.value.trim() : '';
+            
+            // 현재 입력된 균주명이 없으면 제일 처음 입력한 균주명으로 자동 매핑
+            if (!strain && firstStrain) {
+                strain = firstStrain;
+            }
+
             const name = tr.querySelector('.mapping-name').value.trim();
             const pctInput = tr.querySelector('.mapping-pct').value.trim();
             if (name || strain) {

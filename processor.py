@@ -160,6 +160,12 @@ def extract_group_name(sample: str) -> str:
     return m.group(1) if m else sample
 
 
+def natural_sort_key(s: str):
+    """문자열 내의 숫자를 인식하여 자연스러운 정렬(Natural Sort)을 하기 위한 키 함수."""
+    import re
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', str(s))]
+
+
 def compute_group_stats(df: pd.DataFrame):
     """그룹별 평균(Mean)과 표준편차(SD)를 반환."""
     time_cols = [c for c in df.columns if c.startswith("T")]
@@ -168,6 +174,11 @@ def compute_group_stats(df: pd.DataFrame):
 
     mean_df = df.groupby("Group")[time_cols].mean()
     sd_df = df.groupby("Group")[time_cols].std(ddof=1)  # 표본 표준편차
+
+    # 자연스러운 정렬 적용 (SM1, SM2, ..., SM10)
+    sorted_groups = sorted(mean_df.index.tolist(), key=natural_sort_key)
+    mean_df = mean_df.reindex(sorted_groups)
+    sd_df = sd_df.reindex(sorted_groups)
 
     # 단일 반복인 경우 SD = 0 처리
     sd_df = sd_df.fillna(0)
