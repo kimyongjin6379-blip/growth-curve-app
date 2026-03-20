@@ -159,6 +159,7 @@
                 currentStrain = strain;
             } else {
                 strain = currentStrain;
+                if (strainInput && strain !== '') strainInput.value = strain;
             }
 
             // 샘플명 처리
@@ -168,6 +169,7 @@
                 currentName = name;
             } else {
                 name = currentName;
+                if (nameInput && name !== '') nameInput.value = name;
             }
 
             // 펩톤 농도 처리
@@ -177,6 +179,7 @@
                 currentPct = pct;
             } else {
                 pct = currentPct;
+                if (pctInput && pct !== '') pctInput.value = pct;
             }
 
             if (name || strain || pct !== '') {
