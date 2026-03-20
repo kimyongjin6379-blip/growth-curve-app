@@ -142,43 +142,49 @@
     function collectSampleMap() {
         const rows = mappingTbody.querySelectorAll('tr');
         const result = [];
-        let firstStrain = '';
-
-        // 첫 번째 부분: 첫 번째로 입력된 균주명을 찾는다
-        for (let i = 0; i < rows.length; i++) {
-            const strainInput = rows[i].querySelector('.mapping-strain');
-            if (strainInput && strainInput.value.trim() !== '') {
-                firstStrain = strainInput.value.trim();
-                break;
-            }
-        }
         
-        // 입력된 균주명이 하나도 없으면 전역 '사용 균주' 값으로 대체
-        if (!firstStrain) {
-            const globalStrainInput = document.getElementById('strain');
-            if (globalStrainInput) {
-                firstStrain = globalStrainInput.value.trim();
-            }
-        }
+        // 초기 '사용 균주' 값 가져오기
+        const globalStrainInput = document.getElementById('strain');
+        let currentStrain = globalStrainInput ? globalStrainInput.value.trim() : '';
+        let currentName = '';
+        let currentPct = '';
 
         rows.forEach((tr) => {
             const code = tr.querySelector('.mapping-code').textContent.trim();
+            
+            // 균주명 처리 (값이 있으면 갱신, 없으면 이전 값 유지)
             const strainInput = tr.querySelector('.mapping-strain');
             let strain = strainInput ? strainInput.value.trim() : '';
-            
-            // 현재 입력된 균주명이 없으면 제일 처음 입력한 균주명으로 자동 매핑
-            if (!strain && firstStrain) {
-                strain = firstStrain;
+            if (strain !== '') {
+                currentStrain = strain;
+            } else {
+                strain = currentStrain;
             }
 
-            const name = tr.querySelector('.mapping-name').value.trim();
-            const pctInput = tr.querySelector('.mapping-pct').value.trim();
-            if (name || strain) {
+            // 샘플명 처리
+            const nameInput = tr.querySelector('.mapping-name');
+            let name = nameInput ? nameInput.value.trim() : '';
+            if (name !== '') {
+                currentName = name;
+            } else {
+                name = currentName;
+            }
+
+            // 펩톤 농도 처리
+            const pctInput = tr.querySelector('.mapping-pct');
+            let pct = pctInput ? pctInput.value.trim() : '';
+            if (pct !== '') {
+                currentPct = pct;
+            } else {
+                pct = currentPct;
+            }
+
+            if (name || strain || pct !== '') {
                 result.push({
                     code: code,
                     strain: strain,
                     name: name,
-                    peptone_pct: pctInput !== '' ? parseFloat(pctInput) : 0.0,
+                    peptone_pct: pct !== '' ? parseFloat(pct) : 0.0,
                 });
             }
         });
