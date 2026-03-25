@@ -263,8 +263,9 @@ def write_output_bytes(
     map_title = ws1.cell(row=map_start_row, column=1, value="실험 샘플 구성")
     map_title.font = Font(bold=True, size=12)
 
-    map_headers = ["그룹코드", "샘플명 (배지/펩톤)", "펩톤 농도 (%)"]
+    map_headers = ["그룹코드", "펩톤1", "비율1(%)", "펩톤2", "비율2(%)", "총농도(%)"]
     map_header_fill = PatternFill("solid", fgColor="B4C6E7")
+    blend_fill = PatternFill("solid", fgColor="E2EFDA")
     for j, h in enumerate(map_headers, start=1):
         cell = ws1.cell(row=map_start_row + 1, column=j, value=h)
         cell.font = header_font
@@ -278,22 +279,44 @@ def write_output_bytes(
         cell_code.border = thin_border
         cell_code.alignment = center_align
 
-        # 샘플명 (매핑 있으면 채움, 없으면 빈칸)
-        display = get_display_name(grp, smap)
-        cell_name = ws1.cell(
-            row=i, column=2, value=display if display != grp else ""
-        )
-        cell_name.border = thin_border
+        # 블렌딩 정보 확인
+        blend = BLEND_INFO.get(grp)
+        if blend:
+            # 블렌딩 행
+            ws1.cell(row=i, column=2, value=blend["peptone_1"]).border = thin_border
+            c_r1 = ws1.cell(row=i, column=3, value=blend["ratio_1"])
+            c_r1.border = thin_border
+            c_r1.alignment = center_align
+            ws1.cell(row=i, column=4, value=blend["peptone_2"]).border = thin_border
+            c_r2 = ws1.cell(row=i, column=5, value=blend["ratio_2"])
+            c_r2.border = thin_border
+            c_r2.alignment = center_align
+            # 블렌딩 행 하이라이트
+            for col in range(1, 7):
+                ws1.cell(row=i, column=col).fill = blend_fill
+        else:
+            # 단일 펩톤 행
+            display = get_display_name(grp, smap)
+            ws1.cell(
+                row=i, column=2, value=display if display != grp else ""
+            ).border = thin_border
+            ws1.cell(row=i, column=3, value=100).border = thin_border
+            ws1.cell(row=i, column=3).alignment = center_align
+            ws1.cell(row=i, column=4, value="").border = thin_border
+            ws1.cell(row=i, column=5, value="").border = thin_border
 
-        # 펩톤 농도 (매핑 있으면 채움, 없으면 빈칸)
+        # 총 펩톤 농도
         pct = get_peptone_pct(grp, smap)
-        cell_pct = ws1.cell(row=i, column=3, value=pct if pct is not None else "")
+        cell_pct = ws1.cell(row=i, column=6, value=pct if pct is not None else "")
         cell_pct.border = thin_border
         cell_pct.alignment = center_align
         if pct is not None:
             cell_pct.number_format = "0.0"
 
-    ws1.column_dimensions["C"].width = 18
+    ws1.column_dimensions["C"].width = 12
+    ws1.column_dimensions["D"].width = 18
+    ws1.column_dimensions["E"].width = 12
+    ws1.column_dimensions["F"].width = 12
 
     # =================================================================
     # Sheet 2: raw (Blank 보정 Well별 데이터)
@@ -756,12 +779,17 @@ def parse_sample_map(sample_map_list: Optional[List[Dict]] = None) -> Dict[str, 
     Parameters
     ----------
     sample_map_list : list of dict
-        [{"code": "SM1", "name": "MRS (Control)", "peptone_pct": 0.0, "strain": "L. plantarum"}, ...]
+        [{"code": "SM1", "name": "PEA-1", "peptone_pct": 1.0, "strain": "L. plantarum",
+          "peptone_1": "PEA-1", "ratio_1": 60, "peptone_2": "SOY-1", "ratio_2": 40}, ...]
 
     Returns
     -------
-    dict: {"SM1": ("MRS (Control)", 0.0, "L. plantarum"), ...}
+    dict: {"SM1": ("PEA-1", 1.0, "L. plantarum"), ...}
+    Also stores blend info in BLEND_INFO module-level dict for Excel output.
     """
+    global BLEND_INFO
+    BLEND_INFO = {}
+
     if not sample_map_list:
         return {}
 
@@ -778,7 +806,22 @@ def parse_sample_map(sample_map_list: Optional[List[Dict]] = None) -> Dict[str, 
                 pct_val = 0.0
             result[code] = (name, pct_val, strain)
 
+            # 블렌딩 정보 저장
+            p1 = item.get("peptone_1", "").strip()
+            p2 = item.get("peptone_2", "").strip()
+            if p1 and p2:
+                r1 = float(item.get("ratio_1", 100))
+                r2 = float(item.get("ratio_2", 0))
+                BLEND_INFO[code] = {
+                    "peptone_1": p1, "ratio_1": r1,
+                    "peptone_2": p2, "ratio_2": r2,
+                }
+
     return result
+
+
+# 블렌딩 정보 저장용 모듈 변수
+BLEND_INFO: Dict[str, Dict] = {}
 
 
 # ---------------------------------------------------------------------------

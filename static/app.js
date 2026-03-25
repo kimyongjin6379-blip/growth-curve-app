@@ -130,10 +130,25 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="mapping-code">${grp}</td>
-                <td><input type="text" class="form-input mapping-strain" data-code="${grp}" placeholder="균주명 입력"></td>
-                <td><input type="text" class="form-input mapping-name" data-code="${grp}" placeholder="샘플명 입력"></td>
-                <td><input type="number" class="form-input mapping-pct" data-code="${grp}" placeholder="0.0" step="0.1" min="0"></td>
+                <td><input type="text" class="form-input mapping-strain" data-code="${grp}" placeholder="균주명"></td>
+                <td><input type="text" class="form-input mapping-peptone1" data-code="${grp}" placeholder="펩톤명"></td>
+                <td><input type="number" class="form-input mapping-ratio1" data-code="${grp}" placeholder="100" step="1" min="0" max="100" value="100"></td>
+                <td><input type="text" class="form-input mapping-peptone2" data-code="${grp}" placeholder="블렌딩 시 입력"></td>
+                <td><input type="number" class="form-input mapping-ratio2" data-code="${grp}" placeholder="0" step="1" min="0" max="100"></td>
+                <td><input type="number" class="form-input mapping-total-pct" data-code="${grp}" placeholder="1.0" step="0.1" min="0"></td>
             `;
+            // 비율 자동 계산: ratio1 변경 시 ratio2 = 100 - ratio1
+            const ratio1Input = tr.querySelector('.mapping-ratio1');
+            const ratio2Input = tr.querySelector('.mapping-ratio2');
+            ratio1Input.addEventListener('input', () => {
+                const v = parseFloat(ratio1Input.value) || 0;
+                const p2 = tr.querySelector('.mapping-peptone2').value.trim();
+                if (p2) ratio2Input.value = Math.max(0, 100 - v);
+            });
+            ratio2Input.addEventListener('input', () => {
+                const v = parseFloat(ratio2Input.value) || 0;
+                ratio1Input.value = Math.max(0, 100 - v);
+            });
             mappingTbody.appendChild(tr);
         });
         sampleMapCard.style.display = 'block';
@@ -142,16 +157,14 @@
     function collectSampleMap() {
         const rows = mappingTbody.querySelectorAll('tr');
         const result = [];
-        
+
         // 초기 '사용 균주' 값 가져오기
         const globalStrainInput = document.getElementById('strain');
         let currentStrain = globalStrainInput ? globalStrainInput.value.trim() : '';
-        let currentName = '';
-        let currentPct = '';
 
         rows.forEach((tr) => {
             const code = tr.querySelector('.mapping-code').textContent.trim();
-            
+
             // 균주명 처리 (값이 있으면 갱신, 없으면 이전 값 유지)
             const strainInput = tr.querySelector('.mapping-strain');
             let strain = strainInput ? strainInput.value.trim() : '';
@@ -162,33 +175,34 @@
                 if (strainInput && strain !== '') strainInput.value = strain;
             }
 
-            // 샘플명 처리
-            const nameInput = tr.querySelector('.mapping-name');
-            let name = nameInput ? nameInput.value.trim() : '';
-            if (name !== '') {
-                currentName = name;
-            } else {
-                name = currentName;
-                if (nameInput && name !== '') nameInput.value = name;
-            }
+            // 펩톤1 (필수)
+            const peptone1 = (tr.querySelector('.mapping-peptone1').value || '').trim();
+            const ratio1 = parseFloat(tr.querySelector('.mapping-ratio1').value) || 100;
 
-            // 펩톤 농도 처리
-            const pctInput = tr.querySelector('.mapping-pct');
-            let pct = pctInput ? pctInput.value.trim() : '';
-            if (pct !== '') {
-                currentPct = pct;
-            } else {
-                pct = currentPct;
-                if (pctInput && pct !== '') pctInput.value = pct;
-            }
+            // 펩톤2 (블렌딩 시)
+            const peptone2 = (tr.querySelector('.mapping-peptone2').value || '').trim();
+            const ratio2 = parseFloat(tr.querySelector('.mapping-ratio2').value) || 0;
 
-            if (name || strain || pct !== '') {
-                result.push({
+            // 총 펩톤 농도
+            const totalPct = parseFloat(tr.querySelector('.mapping-total-pct').value) || 0;
+
+            if (peptone1 || strain) {
+                const entry = {
                     code: code,
                     strain: strain,
-                    name: name,
-                    peptone_pct: pct !== '' ? parseFloat(pct) : 0.0,
-                });
+                    name: peptone1,
+                    peptone_pct: totalPct,
+                    peptone_1: peptone1,
+                    ratio_1: ratio1,
+                };
+                // 블렌딩인 경우에만 peptone_2 추가
+                if (peptone2) {
+                    entry.peptone_2 = peptone2;
+                    entry.ratio_2 = ratio2;
+                    // display name: "PEA-1(60)+SOY-1(40)"
+                    entry.name = `${peptone1}(${ratio1})+${peptone2}(${ratio2})`;
+                }
+                result.push(entry);
             }
         });
         return result;
