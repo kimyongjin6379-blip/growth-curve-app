@@ -655,6 +655,7 @@ body::before {
 
 .mapping-table {
     width: 100%;
+    min-width: 700px;
     border-collapse: collapse;
     font-size: 0.84rem;
 }
@@ -668,10 +669,19 @@ body::before {
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     letter-spacing: 0.02em;
+    white-space: nowrap;
 }
 
+.mapping-table thead th:nth-child(1) { width: 90px; }   /* 그룹코드 */
+.mapping-table thead th:nth-child(2) { width: 120px; }  /* 균주명 */
+.mapping-table thead th:nth-child(3) { width: 120px; }  /* 펩톤1 */
+.mapping-table thead th:nth-child(4) { width: 80px; }   /* 비율1 */
+.mapping-table thead th:nth-child(5) { width: 120px; }  /* 펩톤2 */
+.mapping-table thead th:nth-child(6) { width: 80px; }   /* 비율2 */
+.mapping-table thead th:nth-child(7) { width: 80px; }   /* 총농도 */
+
 .mapping-table tbody td {
-    padding: 6px 8px;
+    padding: 6px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     vertical-align: middle;
 }
@@ -691,7 +701,12 @@ body::before {
     font-size: 0.82rem;
     white-space: nowrap;
     padding-left: 12px !important;
-    width: 90px;
+}
+
+.mapping-table .form-input.mapping-strain,
+.mapping-table .form-input.mapping-peptone1,
+.mapping-table .form-input.mapping-peptone2 {
+    min-width: 100px;
 }
 
 .mapping-table .form-input {
@@ -700,7 +715,11 @@ body::before {
 }
 
 .mapping-table .mapping-pct {
-    width: 80px;
+    width: 85px;
+}
+
+.mapping-table .form-input.mapping-total-pct {
+    width: 85px;
 }
 
 /* ── Footer ── */
