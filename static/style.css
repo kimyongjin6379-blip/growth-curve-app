@@ -176,7 +176,7 @@ body::before {
 /* ── Main Content ── */
 .main-content {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 520px 1fr;
     gap: 24px;
     padding: 28px 0;
     flex: 1;
@@ -655,7 +655,7 @@ body::before {
 
 .mapping-table {
     width: 100%;
-    min-width: 700px;
+    min-width: 500px;
     border-collapse: collapse;
     font-size: 0.84rem;
 }
@@ -749,7 +749,7 @@ body::before {
 }
 
 /* ── Responsive ── */
-@media (max-width: 960px) {
+@media (max-width: 1060px) {
     .main-content {
         grid-template-columns: 1fr;
     }
