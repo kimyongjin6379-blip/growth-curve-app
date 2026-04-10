@@ -228,6 +228,7 @@
         formData.append('experiment_date', document.getElementById('experiment-date').value || '');
         formData.append('goal', document.getElementById('goal').value || '');
         formData.append('strain', document.getElementById('strain').value || '');
+        formData.append('base_media', document.getElementById('base-media').value || '');
         formData.append('media_type', document.getElementById('media-type').value || 'peptone_screening');
 
         // Collect sample mapping if available

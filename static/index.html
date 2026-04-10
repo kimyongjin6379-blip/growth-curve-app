@@ -116,7 +116,18 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="strain">사용 균주</label>
-                        <input type="text" class="form-input" id="strain" placeholder="예: Lactobacillus plantarum">
+                        <input type="text" class="form-input" id="strain" placeholder="예: Lactobacillus plantarum 또는 LP">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="base-media">사용 배지</label>
+                        <input type="text" class="form-input" id="base-media" placeholder="예: MRS, TSB, LB" list="media-suggestions">
+                        <datalist id="media-suggestions">
+                            <option value="MRS">
+                            <option value="TSB">
+                            <option value="LB">
+                            <option value="BHI">
+                            <option value="M17">
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="media-type">실험 유형</label>

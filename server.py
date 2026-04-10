@@ -33,6 +33,7 @@ async def process_upload(
     experiment_date: str = Form(""),
     goal: str = Form(""),
     strain: str = Form(""),
+    base_media: str = Form(""),
     media_type: str = Form("peptone_screening"),
     sample_map_json: str = Form("[]"),
 ):
@@ -55,6 +56,7 @@ async def process_upload(
         "experiment_date": experiment_date,
         "goal": goal,
         "strain": strain,
+        "base_media": base_media,
         "media_type": media_type,
     }
 
