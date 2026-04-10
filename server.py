@@ -5,14 +5,18 @@ Growth Curve Data Automation Tool — FastAPI 백엔드
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
 import tempfile
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+
+logger = logging.getLogger(__name__)
 
 from processor import process_file
 
@@ -29,6 +33,7 @@ async def process_upload(
     experiment_date: str = Form(""),
     goal: str = Form(""),
     strain: str = Form(""),
+    media_type: str = Form("peptone_screening"),
     sample_map_json: str = Form("[]"),
 ):
     """업로드된 원본 엑셀 파일을 처리하고, 가공 결과를 반환."""
@@ -50,6 +55,7 @@ async def process_upload(
         "experiment_date": experiment_date,
         "goal": goal,
         "strain": strain,
+        "media_type": media_type,
     }
 
     # 샘플 매핑 JSON 파싱
@@ -71,6 +77,23 @@ async def process_upload(
     output_filename = f"{original_stem}_processed.xlsx"
     output_path = TEMP_DIR / f"{file_id}.xlsx"
     output_path.write_bytes(excel_bytes)
+
+    # PeptoMatch DB에 성장 데이터 자동 전송 (fire-and-forget)
+    peptomatch_url = os.getenv("PEPTOMATCH_INGEST_URL", "https://web-production-02f4.up.railway.app/api/ingest")
+    if peptomatch_url and chart_data:
+        try:
+            ingest_payload = {
+                "metadata": metadata,
+                "sample_map": sample_map_list,
+                "chart_data": chart_data,
+                "source_filename": file.filename or "unknown",
+            }
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(peptomatch_url, json=ingest_payload)
+                logger.info(f"PeptoMatch ingest response: {resp.status_code}")
+        except Exception as e:
+            # 전송 실패해도 가공 결과는 정상 반환 (fire-and-forget)
+            logger.warning(f"PeptoMatch ingest failed (non-blocking): {e}")
 
     return JSONResponse(
         content={
