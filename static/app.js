@@ -135,7 +135,7 @@
                 <td><input type="number" class="form-input mapping-ratio1" data-code="${grp}" placeholder="100" step="1" min="0" max="100" value="100"></td>
                 <td><input type="text" class="form-input mapping-peptone2" data-code="${grp}" placeholder="블렌딩 시 입력"></td>
                 <td><input type="number" class="form-input mapping-ratio2" data-code="${grp}" placeholder="0" step="1" min="0" max="100"></td>
-                <td><input type="number" class="form-input mapping-total-pct" data-code="${grp}" placeholder="1.0" step="0.1" min="0"></td>
+                <td><input type="number" class="form-input mapping-total-pct" data-code="${grp}" placeholder="2.0" step="0.1" min="0"></td>
             `;
             // 비율 자동 계산: ratio1 변경 시 ratio2 = 100 - ratio1
             const ratio1Input = tr.querySelector('.mapping-ratio1');
@@ -161,6 +161,7 @@
         // 초기 '사용 균주' 값 가져오기
         const globalStrainInput = document.getElementById('strain');
         let currentStrain = globalStrainInput ? globalStrainInput.value.trim() : '';
+        let currentPct = 0;
 
         rows.forEach((tr) => {
             const code = tr.querySelector('.mapping-code').textContent.trim();
@@ -183,8 +184,12 @@
             const peptone2 = (tr.querySelector('.mapping-peptone2').value || '').trim();
             const ratio2 = parseFloat(tr.querySelector('.mapping-ratio2').value) || 0;
 
-            // 총 펩톤 농도
-            const totalPct = parseFloat(tr.querySelector('.mapping-total-pct').value) || 0;
+            // 총 펩톤 농도 (carry-forward: 값이 있으면 갱신, 없으면 이전 값 유지)
+            const pctRaw = (tr.querySelector('.mapping-total-pct').value || '').trim();
+            if (pctRaw !== '') {
+                currentPct = parseFloat(pctRaw) || 0;
+            }
+            const totalPct = currentPct;
 
             if (peptone1 || strain) {
                 const entry = {
