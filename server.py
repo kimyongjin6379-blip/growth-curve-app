@@ -81,8 +81,13 @@ async def process_upload(
     output_path.write_bytes(excel_bytes)
 
     # PeptoMatch DB에 성장 데이터 자동 전송 (fire-and-forget)
+    # 샘플 매핑에 실제 펩톤 정보가 있을 때만 전송 (첫 번째 가공은 매핑 없이 진행되므로 skip)
+    has_peptone_info = any(
+        entry.get("peptone_1") or entry.get("name")
+        for entry in sample_map_list
+    ) if sample_map_list else False
     peptomatch_url = os.getenv("PEPTOMATCH_INGEST_URL", "https://web-production-02f4.up.railway.app/api/ingest")
-    if peptomatch_url and chart_data:
+    if peptomatch_url and chart_data and has_peptone_info:
         try:
             ingest_payload = {
                 "metadata": metadata,
