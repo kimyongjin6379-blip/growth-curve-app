@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
-from processor import process_file
+from processor import process_file, process_media_optimization
 
 app = FastAPI(title="Growth Curve Data Automation Tool", version="1.1.0")
 
@@ -60,14 +60,63 @@ async def process_upload(
         "media_type": media_type,
     }
 
-    # 샘플 매핑 JSON 파싱
+    # 페이로드 파싱: 구버전(list) 또는 신버전(dict with experiment_type)
     try:
-        sample_map_list = json.loads(sample_map_json) if sample_map_json else []
+        parsed_payload = json.loads(sample_map_json) if sample_map_json else []
     except json.JSONDecodeError:
-        sample_map_list = []
+        parsed_payload = []
+
+    # payload 형태 판별
+    is_media_opt = (
+        isinstance(parsed_payload, dict)
+        and parsed_payload.get("experiment_type") == "media_optimization"
+    )
+
+    if is_media_opt:
+        sample_map_list = []  # 배지 최적화에선 사용 X
+        base_medium = parsed_payload.get("base_medium", {}) or {}
+        # 신 포맷: composition_groups (composition_groups → per-SM variations 변환)
+        # 구 포맷: variations (legacy, 직접 사용)
+        composition_groups = parsed_payload.get("composition_groups", []) or []
+        if composition_groups:
+            variations = []
+            for cg in composition_groups:
+                applied = cg.get("applied_samples") or []
+                cg_name = (cg.get("name") or "").strip()
+                cg_strain = (cg.get("strain") or "").strip()
+                cg_desc = (cg.get("description") or "").strip()
+                cg_comp = cg.get("composition") or []
+                for sm_code in applied:
+                    variations.append({
+                        "code": sm_code,
+                        "strain": cg_strain,
+                        "condition_name": cg_name,
+                        "description": cg_desc,
+                        "composition": cg_comp,   # full per-SM composition
+                        "group_id": cg.get("id"),
+                    })
+        else:
+            variations = parsed_payload.get("variations", []) or []
+    else:
+        # 펩톤 스크리닝 / 기타: 구버전 호환 (list) 또는 sample_map 래핑
+        if isinstance(parsed_payload, list):
+            sample_map_list = parsed_payload
+        else:
+            sample_map_list = parsed_payload.get("sample_map", [])
+        base_medium = None
+        variations = []
+        composition_groups = []
 
     try:
-        excel_bytes, chart_data = process_file(file_bytes, metadata, sample_map_list)
+        if is_media_opt:
+            excel_bytes, chart_data = process_media_optimization(
+                file_bytes, metadata, base_medium, variations,
+                composition_groups=composition_groups,
+            )
+        else:
+            excel_bytes, chart_data = process_file(
+                file_bytes, metadata, sample_map_list
+            )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"데이터 처리 오류: {str(e)}")
     except Exception as e:
@@ -81,17 +130,36 @@ async def process_upload(
     output_path.write_bytes(excel_bytes)
 
     # PeptoMatch DB에 성장 데이터 자동 전송 (fire-and-forget)
-    # 샘플 매핑에 실제 펩톤 정보가 있을 때만 전송 (첫 번째 가공은 매핑 없이 진행되므로 skip)
-    has_peptone_info = any(
-        entry.get("peptone_1") or entry.get("name")
-        for entry in sample_map_list
-    ) if sample_map_list else False
+    # 의미있는 매핑이 있을 때만 전송 (첫 번째 가공은 매핑 없이 진행되므로 skip)
+    if is_media_opt:
+        # 배지 최적화: composition_group 또는 variation 중 하나라도 의미 있는 정보가 있으면 전송
+        has_meaningful_info = (
+            bool(composition_groups) and any(
+                cg.get("strain") or cg.get("name") or cg.get("description")
+                or cg.get("composition") or cg.get("applied_samples")
+                for cg in composition_groups
+            )
+        ) or any(
+            v.get("strain") or v.get("condition_name") or v.get("description")
+            or v.get("composition") or v.get("overrides")
+            for v in variations
+        )
+    else:
+        has_meaningful_info = any(
+            entry.get("peptone_1") or entry.get("name")
+            for entry in sample_map_list
+        ) if sample_map_list else False
+
     peptomatch_url = os.getenv("PEPTOMATCH_INGEST_URL", "https://web-production-02f4.up.railway.app/api/ingest")
-    if peptomatch_url and chart_data and has_peptone_info:
+    if peptomatch_url and chart_data and has_meaningful_info:
         try:
             ingest_payload = {
                 "metadata": metadata,
+                "experiment_type": "media_optimization" if is_media_opt else "peptone_screening",
                 "sample_map": sample_map_list,
+                "base_medium": base_medium,
+                "variations": variations,
+                "composition_groups": composition_groups if is_media_opt else [],
                 "chart_data": chart_data,
                 "source_filename": file.filename or "unknown",
             }

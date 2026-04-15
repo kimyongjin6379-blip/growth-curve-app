@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.4">
 </head>
 <body>
     <div class="app-wrapper">
@@ -139,7 +139,7 @@
                     </div>
                 </div>
 
-                <!-- Sample Mapping (동적으로 표시) -->
+                <!-- Sample Mapping (펩톤 스크리닝 / 기타용) -->
                 <div class="card" id="sample-map-card" style="display:none;">
                     <div class="card-header">
                         <h2 class="card-title">
@@ -167,6 +167,69 @@
                             </thead>
                             <tbody id="mapping-tbody"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Media Optimization (배지 성분 최적화용) -->
+                <div class="card" id="media-opt-card" style="display:none;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <path d="M10 6V10L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            배지 조성 설계
+                        </h2>
+                        <span class="card-hint">Base + 조성 그룹 → SM 매핑</span>
+                    </div>
+
+                    <!-- ── Base Medium (출발점 템플릿) ── -->
+                    <div class="media-opt-section base-medium-section">
+                        <h3 class="media-opt-title">
+                            Base Medium
+                            <span class="title-hint">— 조성 그룹의 시작 템플릿</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label" for="base-medium-preset">배지 템플릿</label>
+                            <select class="form-input" id="base-medium-preset">
+                                <option value="MRS">MRS (미리 채워짐)</option>
+                                <option value="TSB">TSB (미리 채워짐)</option>
+                                <option value="LB">LB (미리 채워짐)</option>
+                                <option value="NONE">직접 입력 (빈 그룹에서 시작)</option>
+                            </select>
+                            <p class="form-hint">
+                                <b>MRS/TSB/LB</b>: 새 조성 그룹을 추가하면 해당 배지 조성이 자동으로 채워집니다 →
+                                원하는 성분만 수정하세요. (종합 시트에 "Base 대비 차이" 강조 표시)<br>
+                                <b>직접 입력</b>: 각 그룹을 빈 상태에서 자유롭게 정의. Base 비교 없이 독립.
+                            </p>
+                        </div>
+
+                        <!-- Read-only preview of preset composition -->
+                        <details id="base-preview-wrap" class="base-preview">
+                            <summary>📋 Base Medium 조성 미리보기</summary>
+                            <div id="base-preview-content" class="base-preview-content"></div>
+                        </details>
+                    </div>
+
+                    <!-- ── 조성 그룹 (Composition Groups) ── -->
+                    <div class="media-opt-section comp-groups-section">
+                        <h3 class="media-opt-title">
+                            조성 그룹 (Composition Groups)
+                            <span class="title-hint">— 각 조성을 SM 샘플에 매핑</span>
+                        </h3>
+                        <p class="mapping-desc">
+                            샘플별 배지 조성을 정의하고, <b>SM1~SM12 중 어느 실험구에 적용할지</b> 선택하세요.
+                            동일 조성을 3반복하려면 SM3개를 같은 그룹에 선택하면 됩니다.
+                            서로 다른 12개 조성을 비교하려면 12개 그룹을 추가하세요.
+                        </p>
+
+                        <div id="comp-groups-container"></div>
+
+                        <button type="button" class="btn-add-comp-group" id="btn-add-comp-group">
+                            <span class="plus-icon">+</span>
+                            <span>조성 그룹 추가</span>
+                        </button>
                     </div>
                 </div>
 
@@ -265,6 +328,6 @@
         </footer>
     </div>
 
-    <script src="app.js?v=1.3"></script>
+    <script src="app.js?v=1.4"></script>
 </body>
 </html>
