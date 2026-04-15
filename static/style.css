@@ -820,3 +820,548 @@ select.form-input option {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* ============================================================
+   Media Optimization UI
+   ============================================================ */
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    line-height: 1.4;
+}
+
+.media-opt-section {
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.media-opt-section:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0.5rem;
+}
+
+.media-opt-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-label);
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.02em;
+}
+
+.chip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.chip:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-active);
+    color: var(--text-primary);
+}
+
+.chip input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--accent-primary);
+}
+
+.chip.checked {
+    background: var(--accent-glow);
+    border-color: var(--border-active);
+    color: var(--text-primary);
+}
+
+.chip-alias {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 0.2rem;
+}
+
+.component-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.component-row {
+    display: grid;
+    grid-template-columns: 1.6fr 0.9fr 0.7fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem 0.6rem;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.component-row input[type="text"],
+.component-row input[type="number"],
+.component-row select {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.component-row input:focus,
+.component-row select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.component-row .row-name {
+    font-weight: 500;
+    color: var(--text-label);
+    font-size: 0.85rem;
+}
+
+.component-row .row-remove {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.component-row .row-remove:hover {
+    color: var(--error);
+    background: var(--error-bg);
+}
+
+.btn-small {
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 0.6rem;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+}
+
+.btn-small:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: var(--accent-glow);
+}
+
+/* Variation table overrides column */
+#variation-table td.override-cell {
+    min-width: 240px;
+}
+
+.override-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border-active);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    color: var(--text-primary);
+    margin: 0.15rem 0.2rem 0.15rem 0;
+}
+
+.override-badge .badge-remove {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.override-badge .badge-remove:hover {
+    color: var(--error);
+}
+
+.override-add-select {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    margin-top: 0.3rem;
+    width: 100%;
+    font-family: inherit;
+}
+
+.override-value-input {
+    width: 70px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.72rem;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+/* Variation row: condition + copy button */
+.mapping-table .form-input.var-condition {
+    min-width: 110px;
+}
+
+.var-copy-cell {
+    text-align: center;
+    width: 40px;
+}
+
+.var-copy-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: all var(--transition-fast);
+}
+
+.var-copy-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: var(--accent-glow);
+}
+
+@keyframes row-copied-flash {
+    0%   { background: rgba(16, 185, 129, 0.25); }
+    100% { background: transparent; }
+}
+
+.row-copied-flash {
+    animation: row-copied-flash 0.7s ease;
+}
+
+/* ============================================================
+   Composition Group Cards (배지 성분 최적화 v2)
+   ============================================================ */
+.media-opt-title .title-hint {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-left: 0.4rem;
+}
+
+.composition-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Base Medium 조성 미리보기 (read-only) */
+.base-preview {
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0.45rem 0.7rem;
+}
+
+.base-preview > summary {
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-label);
+    user-select: none;
+    padding: 0.15rem 0;
+    list-style-position: inside;
+}
+
+.base-preview > summary:hover {
+    color: var(--text-primary);
+}
+
+.base-preview-content {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border-color);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.35rem;
+    font-size: 0.76rem;
+}
+
+.base-preview-content .bp-item {
+    padding: 0.3rem 0.5rem;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
+.base-preview-content .bp-item .bp-cat {
+    display: inline-block;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-right: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.base-preview-content .bp-item .bp-val {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    margin-left: 0.3rem;
+}
+
+.base-preview-content.bp-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.78rem;
+    grid-template-columns: 1fr;
+}
+
+.composition-editor .ce-section {
+    padding: 0.6rem 0.7rem;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.composition-editor .ce-section-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-label);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+}
+
+.composition-editor .chip-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.3rem;
+    margin-bottom: 0.6rem;
+}
+
+.composition-editor .chip {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.74rem;
+}
+
+.composition-editor .component-row {
+    grid-template-columns: 1.4fr 0.9fr 0.7fr auto;
+    padding: 0.4rem 0.5rem;
+}
+
+.composition-editor .component-row input,
+.composition-editor .component-row select {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.5rem;
+}
+
+.composition-editor .component-row .row-name {
+    font-size: 0.8rem;
+}
+
+#comp-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.comp-group-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-glass);
+    padding: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.comp-group-card:focus-within {
+    border-color: var(--border-active);
+    box-shadow: 0 0 0 1px var(--accent-glow);
+}
+
+.cg-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cg-num {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.cg-header-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-left: auto;
+}
+
+.cg-action-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cg-action-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: var(--accent-glow);
+}
+
+.cg-action-btn.cg-remove-btn:hover {
+    border-color: var(--error);
+    color: var(--error);
+    background: var(--error-bg);
+}
+
+.cg-meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.cg-meta-row .form-input {
+    font-size: 0.85rem;
+}
+
+.cg-meta-row-full {
+    margin-bottom: 0.9rem;
+}
+
+.cg-section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0.8rem 0 0.4rem 0;
+}
+
+/* SM chip mapping (12 buttons) */
+.sm-chip-row {
+    /* Always 6 per row → 12개 SM이면 2줄(6+6)로 자연스럽게 wrap */
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+.sm-chip {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.5rem 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.sm-chip:hover:not(.sm-chip-active) {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.sm-chip-active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.sm-chip-claimed {
+    /* Used when SM is taken by another group (visual hint) */
+    border-style: dashed;
+    opacity: 0.55;
+}
+
+.sm-summary {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    text-align: right;
+}
+
+/* "+ 조성 그룹 추가" big button */
+.btn-add-comp-group {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.btn-add-comp-group:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: var(--accent-glow);
+}
+
+.btn-add-comp-group .plus-icon {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Empty state for groups container */
+.cg-empty-state {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    line-height: 1.6;
+}

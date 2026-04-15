@@ -6,3 +6,10 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# Local dev tooling
+.claude/
+.vscode/
+
+# Local test artifacts
+_test_media_opt_output.xlsx
