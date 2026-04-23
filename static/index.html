@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="style.css?v=1.4">
+    <link rel="stylesheet" href="style.css?v=1.5">
 </head>
 <body>
     <div class="app-wrapper">
@@ -157,6 +157,7 @@
                             <thead>
                                 <tr>
                                     <th>그룹코드</th>
+                                    <th title="체크 시 MRS 양성 대조군으로 저장. 펩톤 입력은 무시됩니다.">대조군</th>
                                     <th>균주명</th>
                                     <th>펩톤1</th>
                                     <th>비율1(%)</th>
@@ -167,6 +168,10 @@
                             </thead>
                             <tbody id="mapping-tbody"></tbody>
                         </table>
+                        <p class="mapping-desc" style="margin-top:8px; font-size:12px; opacity:0.75;">
+                            💡 <b>대조군</b>은 같은 실험에서 MRS(표준 배지) 자체를 돌린 양성 대조군입니다.
+                            체크 시 해당 row의 지표는 ML 학습에서 제외되고, 같은 실험군의 펩톤 샘플들을 정규화하는 베이스라인으로 사용됩니다.
+                        </p>
                     </div>
                 </div>
 
@@ -328,6 +333,6 @@
         </footer>
     </div>
 
-    <script src="app.js?v=1.4"></script>
+    <script src="app.js?v=1.5"></script>
 </body>
 </html>

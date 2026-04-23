@@ -130,6 +130,11 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="mapping-code">${grp}</td>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="mapping-is-control" data-code="${grp}"
+                           title="체크 시 MRS 양성 대조군으로 저장"
+                           style="width:18px; height:18px; cursor:pointer;">
+                </td>
                 <td><input type="text" class="form-input mapping-strain" data-code="${grp}" placeholder="균주명"></td>
                 <td><input type="text" class="form-input mapping-peptone1" data-code="${grp}" placeholder="펩톤명"></td>
                 <td><input type="number" class="form-input mapping-ratio1" data-code="${grp}" placeholder="100" step="1" min="0" max="100" value="100"></td>
@@ -149,6 +154,29 @@
                 const v = parseFloat(ratio2Input.value) || 0;
                 ratio1Input.value = Math.max(0, 100 - v);
             });
+
+            // 대조군 체크 시 펩톤 입력 필드 비활성화 + display name 힌트
+            const controlCheckbox = tr.querySelector('.mapping-is-control');
+            const pep1Input = tr.querySelector('.mapping-peptone1');
+            const pep2Input = tr.querySelector('.mapping-peptone2');
+            controlCheckbox.addEventListener('change', () => {
+                const isCtrl = controlCheckbox.checked;
+                [pep1Input, pep2Input, ratio1Input, ratio2Input].forEach((el) => {
+                    el.disabled = isCtrl;
+                    if (isCtrl) el.style.opacity = '0.35';
+                    else el.style.opacity = '';
+                });
+                if (isCtrl) {
+                    pep1Input.value = '';
+                    pep2Input.value = '';
+                    ratio2Input.value = '';
+                    // Visual cue on the row
+                    tr.style.background = 'rgba(148, 163, 184, 0.08)';
+                } else {
+                    tr.style.background = '';
+                }
+            });
+
             mappingTbody.appendChild(tr);
         });
         sampleMapCard.style.display = 'block';
@@ -166,6 +194,10 @@
         rows.forEach((tr) => {
             const code = tr.querySelector('.mapping-code').textContent.trim();
 
+            // 대조군 여부 (최우선 판별)
+            const controlCheckbox = tr.querySelector('.mapping-is-control');
+            const isControl = controlCheckbox ? controlCheckbox.checked : false;
+
             // 균주명 처리 (값이 있으면 갱신, 없으면 이전 값 유지)
             const strainInput = tr.querySelector('.mapping-strain');
             let strain = strainInput ? strainInput.value.trim() : '';
@@ -176,6 +208,29 @@
                 if (strainInput && strain !== '') strainInput.value = strain;
             }
 
+            // 총 펩톤 농도 (carry-forward: 값이 있으면 갱신, 없으면 이전 값 유지)
+            const pctRaw = (tr.querySelector('.mapping-total-pct').value || '').trim();
+            if (pctRaw !== '') {
+                currentPct = parseFloat(pctRaw) || 0;
+            }
+            const totalPct = currentPct;
+
+            if (isControl) {
+                // 대조군 row: 펩톤 정보 무시, is_control=1 플래그만 기록
+                if (strain) {
+                    result.push({
+                        code: code,
+                        strain: strain,
+                        name: 'MRS (Control)',
+                        peptone_pct: 0,
+                        peptone_1: '',
+                        ratio_1: 0,
+                        is_control: 1,
+                    });
+                }
+                return;
+            }
+
             // 펩톤1 (필수)
             const peptone1 = (tr.querySelector('.mapping-peptone1').value || '').trim();
             const ratio1 = parseFloat(tr.querySelector('.mapping-ratio1').value) || 100;
@@ -183,13 +238,6 @@
             // 펩톤2 (블렌딩 시)
             const peptone2 = (tr.querySelector('.mapping-peptone2').value || '').trim();
             const ratio2 = parseFloat(tr.querySelector('.mapping-ratio2').value) || 0;
-
-            // 총 펩톤 농도 (carry-forward: 값이 있으면 갱신, 없으면 이전 값 유지)
-            const pctRaw = (tr.querySelector('.mapping-total-pct').value || '').trim();
-            if (pctRaw !== '') {
-                currentPct = parseFloat(pctRaw) || 0;
-            }
-            const totalPct = currentPct;
 
             if (peptone1 || strain) {
                 const entry = {
@@ -199,6 +247,7 @@
                     peptone_pct: totalPct,
                     peptone_1: peptone1,
                     ratio_1: ratio1,
+                    is_control: 0,
                 };
                 // 블렌딩인 경우에만 peptone_2 추가
                 if (peptone2) {
