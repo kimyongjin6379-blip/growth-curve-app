@@ -740,11 +740,35 @@ def extract_chart_data(
     sd_df: pd.DataFrame,
     time_seconds: list,
     sample_map: Optional[Dict[str, Tuple[str, float, str]]] = None,
+    corrected_df: Optional[pd.DataFrame] = None,
 ) -> Dict:
-    """Plotly 차트에 필요한 데이터를 딕셔너리로 반환."""
+    """Plotly 차트에 필요한 데이터를 딕셔너리로 반환.
+
+    corrected_df가 주어지면 각 그룹의 raw replicate well별 OD trajectory도
+    함께 반환한다 (peptomatch DB에 저장되어 ML/DL 학습에 사용).
+    UI 차트는 mean+sd만 사용하므로 동작 변경 없음.
+    """
     smap = sample_map or {}
     time_cols = [c for c in mean_df.columns if c.startswith("T")]
     time_hours = [round(s / 3600, 2) for s in time_seconds]
+
+    # 그룹별 raw replicate 매핑 (corrected_df가 있을 때만)
+    replicates_by_group: Dict[str, list] = {}
+    if corrected_df is not None and "Sample" in corrected_df.columns:
+        for _, row in corrected_df.iterrows():
+            sample = str(row["Sample"])
+            grp = extract_group_name(sample)
+            well = str(row.get("Well", ""))
+            od_vals = row[time_cols].tolist()
+            od_vals = [
+                None if (isinstance(v, float) and np.isnan(v)) else round(float(v), 5)
+                for v in od_vals
+            ]
+            replicates_by_group.setdefault(grp, []).append({
+                "sample": sample,
+                "well": well,
+                "od": od_vals,
+            })
 
     groups = mean_df.index.tolist()
     series = []
@@ -757,12 +781,18 @@ def extract_chart_data(
         # NaN → None for JSON serialization
         mean_vals = [None if (isinstance(v, float) and np.isnan(v)) else round(v, 5) for v in mean_vals]
         sd_vals = [None if (isinstance(v, float) and np.isnan(v)) else round(v, 5) for v in sd_vals]
-        series.append({
+
+        entry = {
             "name": label,
             "group_code": grp,
             "mean": mean_vals,
             "sd": sd_vals,
-        })
+        }
+        # raw replicates 추가 (있을 때만, UI는 무시)
+        if grp in replicates_by_group:
+            entry["replicates"] = replicates_by_group[grp]
+            entry["n_replicates"] = len(replicates_by_group[grp])
+        series.append(entry)
 
     return {
         "time_hours": time_hours,
@@ -866,8 +896,8 @@ def process_file(
         original_raw,
     )
 
-    # 5) 차트 데이터
-    chart_data = extract_chart_data(mean_df, sd_df, time_seconds, sample_map)
+    # 5) 차트 데이터 (corrected_df도 넘겨서 raw replicates 포함)
+    chart_data = extract_chart_data(mean_df, sd_df, time_seconds, sample_map, corrected_df=corrected)
 
     # 6) 그룹 목록 (프론트엔드 샘플 매핑 UI 용)
     chart_data["groups"] = mean_df.index.tolist()
@@ -1782,8 +1812,8 @@ def process_media_optimization(
         original_raw,
     )
 
-    # 5) 차트 데이터 + variation 메타 enrich
-    chart_data = extract_chart_data(mean_df, sd_df, time_seconds, sample_map)
+    # 5) 차트 데이터 + variation 메타 enrich (corrected도 넘겨 raw replicates 포함)
+    chart_data = extract_chart_data(mean_df, sd_df, time_seconds, sample_map, corrected_df=corrected)
 
     # variations list → dict by code
     var_by_code = {v.get("code"): v for v in variations if v.get("code")}
